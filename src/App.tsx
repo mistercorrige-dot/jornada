@@ -1,51 +1,18 @@
 import { useState, useEffect } from 'react';
 import { 
-  BookOpen, 
-  CheckCircle, 
-  Calendar, 
-  Flame, 
-  Users, 
-  Target, 
-  ChevronLeft,
-  ChevronRight,
-  Trophy,
-  UserPlus,
-  Sparkles,
-  ScrollText,
-  Heart,
-  ShieldCheck,
-  LogOut,
-  AlertTriangle,
-  Lock,
-  Mail,
-  User as UserIcon,
-  LogIn
+  BookOpen, CheckCircle, Calendar, Flame, Users, Target, ChevronLeft, ChevronRight, Trophy,
+  UserPlus, Sparkles, ScrollText, Heart, ShieldCheck, LogOut, AlertTriangle, Lock, Mail,
+  User as UserIcon, LogIn
 } from 'lucide-react';
-
-// Importações do Firebase
 import { initializeApp } from 'firebase/app';
 import { 
-  getAuth, 
-  signInAnonymously, 
-  onAuthStateChanged, 
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  signOut,
-  updateProfile
+  getAuth, signInAnonymously, onAuthStateChanged, signInWithEmailAndPassword,
+  createUserWithEmailAndPassword, signOut, updateProfile
 } from 'firebase/auth';
-import { 
-  getFirestore, 
-  doc, 
-  setDoc, 
-  getDoc, 
-  collection, 
-  onSnapshot, 
-  serverTimestamp 
-} from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, serverTimestamp } from 'firebase/firestore';
 
-// --- SUAS CHAVES CONFIGURADAS ---
+// --- CONFIGURAÇÕES ---
 const apiKey = "AIzaSyAcYF4Uozq-Z3vB72AqOwudfAglCp6k4kU"; 
-
 const firebaseConfig = {
   apiKey: "AIzaSyA9KJqAG2HE3we4mtufa9fctQNXy2v96f0",
   authDomain: "jornada90dias.firebaseapp.com",
@@ -55,24 +22,21 @@ const firebaseConfig = {
   appId: "1:577447169048:web:8a35e82cd707825e8dc76d"
 };
 
-// --- INICIALIZAÇÃO SEGURA ---
+// --- INICIALIZAÇÃO ---
 let app: any;
 let auth: any;
 let db: any;
 let firebaseError: any = null;
-
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
 } catch (e: any) {
-  console.error("Erro ao iniciar Firebase:", e);
-  firebaseError = "Erro na conexão com o banco de dados. Recarregue a página.";
+  console.error("Erro Firebase:", e);
+  firebaseError = "Erro na conexão.";
 }
-
 const appId = "jornada90dias";
 
-// --- DADOS DO PLANO ---
 const rawPlanData = [
   { day: 1, ref: "Mateus 1-3", book: "Mateus", isBookEnd: false },
   { day: 2, ref: "Mateus 4-6", book: "Mateus", isBookEnd: false },
@@ -166,80 +130,58 @@ const rawPlanData = [
   { day: 90, ref: "Apocalipse 20-22", book: "Apocalipse", isBookEnd: true },
 ];
 
-// --- MENSAGEM PADRÃO ---
-const getStaticReflection = () => {
-  return "Ao ler este texto, lembre-se: Deus está com você em cada detalhe da sua jornada.";
-};
+const getStaticReflection = () => "Deus está com você em cada detalhe da sua jornada.";
 
-// --- COMPONENTES UI ---
-// @ts-ignore
-const ProgressBar = ({ current, total }: {current: any, total: any}) => {
+// --- COMPONENTES ---
+const ProgressBar = ({ current, total }: any) => {
   const percent = Math.min(100, Math.max(0, (current / total) * 100));
   return (
     <div className="w-full bg-slate-800 rounded-full h-2.5 mb-2 border border-slate-700 overflow-hidden">
-      <div className="bg-amber-600 h-2.5 rounded-full transition-all duration-500 ease-out" style={{ width: `${percent}%` }}></div>
+      <div className="bg-amber-600 h-2.5 rounded-full transition-all duration-500" style={{ width: `${percent}%` }}></div>
     </div>
   );
 };
 
-// @ts-ignore
 const Modal = ({ isOpen, onClose, title, children }: any) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg max-w-md w-full p-6 relative shadow-2xl">
+    <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+      <div className="bg-slate-900 border border-slate-700 rounded-lg p-6 max-w-md w-full">
         <h3 className="text-xl font-bold text-amber-500 mb-4">{title}</h3>
-        <div className="text-slate-300 mb-6 max-h-[70vh] overflow-y-auto custom-scrollbar">{children}</div>
-        <button onClick={onClose} className="w-full bg-amber-700 hover:bg-amber-600 text-white py-3 rounded font-bold transition-colors">Entendido</button>
+        <div className="text-slate-300 mb-6">{children}</div>
+        <button onClick={onClose} className="w-full bg-amber-700 text-white py-3 rounded font-bold">Entendido</button>
       </div>
     </div>
   );
 };
 
-// --- APLICATIVO PRINCIPAL ---
 export default function App() {
-  // Se o Firebase falhou
-  if (firebaseError) {
-    return (
-      <div className="min-h-screen bg-slate-950 text-white p-10 flex flex-col items-center justify-center text-center">
-        <AlertTriangle className="text-red-500 mb-4" size={48} />
-        <h1 className="text-2xl font-bold mb-2">Ops! Algo deu errado.</h1>
-        <p className="text-slate-400 mb-4">{firebaseError}</p>
-        <button onClick={() => window.location.reload()} className="bg-slate-800 px-4 py-2 rounded">Tentar Novamente</button>
-      </div>
-    );
-  }
+  if (firebaseError) return <div className="text-white p-10">Erro no Banco de Dados</div>;
 
-  // Estados UI
-  const [currentView, setCurrentView] = useState<'dashboard' | 'plan' | 'ranking'>('dashboard');
+  const [currentView, setCurrentView] = useState('dashboard');
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState({ title: "", body: "" });
   const [loading, setLoading] = useState(true);
   const [isLoginView, setIsLoginView] = useState(true);
-
-  // Estados Auth (Usando 'any' para evitar erros de build)
+  
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<any>(null);
   
-  // Inputs
+  const [tempName, setTempName] = useState(""); 
   const [inputName, setInputName] = useState("");
   const [inputEmail, setInputEmail] = useState("");
   const [inputPassword, setInputPassword] = useState("");
   const [authError, setAuthError] = useState("");
-  const [tempName, setTempName] = useState(""); // VARIÁVEL RESTAURADA!
 
-  // Dados
   const [completedDays, setCompletedDays] = useState<any[]>([]);
   const [streak, setStreak] = useState(0);
   const [savedReflections, setSavedReflections] = useState<any>({});
   const [reflectionInput, setReflectionInput] = useState("");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   
-  // AI
   const [aiLoading, setAiLoading] = useState(false);
   const [aiInsight, setAiInsight] = useState<any>(null);
 
-  // Data Atual
   const startDate = new Date('2025-12-01T00:00:00');
   const today = new Date();
   const daysDiff = Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
@@ -248,126 +190,82 @@ export default function App() {
   const activeDayData = rawPlanData.find(d => d.day === viewDay) || rawPlanData[0];
   const isCompleted = completedDays.includes(activeDayData.day);
 
-  // Handlers Auth
+  // Auth Handlers
   const handleAuth = async () => {
     if (!inputEmail || !inputPassword) return;
-    setLoading(true);
-    setAuthError("");
-
+    setLoading(true); setAuthError("");
     try {
       if (isLoginView) {
         await signInWithEmailAndPassword(auth, inputEmail, inputPassword);
       } else {
-        if (!inputName) {
-          setAuthError("Por favor, digite seu nome.");
-          setLoading(false);
-          return;
-        }
-        const userCredential = await createUserWithEmailAndPassword(auth, inputEmail, inputPassword);
-        const newUser = userCredential.user;
-        
+        if (!inputName) { setAuthError("Nome obrigatório"); setLoading(false); return; }
+        const cred = await createUserWithEmailAndPassword(auth, inputEmail, inputPassword);
         // @ts-ignore
-        await updateProfile(newUser, { displayName: inputName });
-        
-        await setDoc(doc(db, 'artifacts', appId, 'users', newUser.uid, 'data', 'profile'), {
-          name: inputName, completedDays: [], createdAt: serverTimestamp()
-        }, { merge: true });
-        
-        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', newUser.uid), {
-          name: inputName, count: 0, lastUpdate: serverTimestamp()
-        }, { merge: true });
+        await updateProfile(cred.user, { displayName: inputName });
+        await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'data', 'profile'), { name: inputName }, { merge: true });
+        // Adiciona ao ranking imediatamente
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', cred.user.uid), { name: inputName, count: 0 }, { merge: true });
+        setUserName(inputName);
       }
-    } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/invalid-email') setAuthError("E-mail inválido.");
-      else if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') setAuthError("E-mail ou senha incorretos.");
-      else if (error.code === 'auth/email-already-in-use') setAuthError("Este e-mail já está cadastrado.");
-      else if (error.code === 'auth/weak-password') setAuthError("A senha deve ter pelo menos 6 caracteres.");
-      else setAuthError("Erro ao conectar. Tente novamente.");
+    } catch (e: any) { 
+        console.error(e);
+        if(e.code === 'auth/invalid-email') setAuthError("E-mail inválido");
+        else if(e.code === 'auth/wrong-password') setAuthError("Senha incorreta");
+        else if(e.code === 'auth/user-not-found') setAuthError("Usuário não encontrado");
+        else setAuthError("Erro no login/cadastro"); 
+    }
+    setLoading(false);
+  };
+
+  const handleAnonymousLogin = async () => {
+      if(!tempName.trim()) return;
+      setLoading(true);
+      try {
+        const result = await signInAnonymously(auth);
+        const user = result.user;
+        // Salva nome do anônimo
+        await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'profile'), { name: tempName, completedDays: [] }, { merge: true });
+        await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid), { name: tempName, count: 0 }, { merge: true });
+        setUserName(tempName);
+      } catch (e) {
+          console.error(e);
+      }
       setLoading(false);
-    }
-  };
+  }
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    setUserName(null);
-    setCompletedDays([]);
-    setSavedReflections({});
-    setStreak(0);
-  };
+  const handleLogout = async () => { await signOut(auth); setUserName(null); setUser(null); };
 
-  // Gemini AI
-  const callGemini = async (promptType: any) => {
-    setAiLoading(true);
-    setAiInsight(null);
-    try {
-      const readingRef = activeDayData.ref;
-      let instruction = "";
-      
-      if (promptType === 'devotional') {
-        instruction = `Você é um mentor cristão sábio (estilo Max Lucado/Rodovalho). O usuário leu: ${readingRef}. Gere uma mensagem devocional CURTA (max 3 frases), simples, encorajadora e focada em vitória/fé. Português.`;
-      } else {
-        instruction = `Você é um professor de escola bíblica. O usuário leu: ${readingRef}. Explique o contexto histórico/cultural dessa passagem de forma muito simples e curiosa (max 3 pontos breves). Português.`;
-      }
-
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }] })
-        }
-      );
-
-      if (!response.ok) throw new Error('Erro na API');
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      setAiInsight(text || "Sem resposta no momento.");
-    } catch (error) {
-      console.error(error);
-      setAiInsight("Não foi possível conectar com a inspiração agora. Tente novamente.");
-    } finally {
-      setAiLoading(false);
-    }
-  };
-
-  // Auth & Data Load
+  // Effects
   useEffect(() => {
     if (!auth) return;
-    // @ts-ignore
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      setUser(currentUser);
-      if (currentUser) {
+    const unsub = onAuthStateChanged(auth, async (u) => {
+      setUser(u);
+      if (u) {
+        // Tenta buscar nome no banco
         try {
-          const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'profile');
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            const data = snap.data();
-            setUserName(data.name || currentUser.displayName || "Usuário");
-            setCompletedDays(data.completedDays || []);
-            setSavedReflections(data.reflections || {});
-            setStreak(data.completedDays?.length || 0);
-          } else {
-             setUserName(currentUser.displayName || "Novo Usuário");
-          }
-        } catch (e) {
-          console.log("Erro de leitura", e);
-        }
-      } else {
-        // Tenta login anonimo apenas se não tiver user (removido para forçar email/senha ou anonimo manual se quisesse, mas aqui queremos email)
-        // Se quiser voltar o anonimo automático, descomente:
-        signInAnonymously(auth).catch(() => {});
+            const docRef = doc(db, 'artifacts', appId, 'users', u.uid, 'data', 'profile');
+            const snap = await getDoc(docRef);
+            if (snap.exists()) {
+                const data = snap.data();
+                setUserName(data.name || u.displayName);
+                setCompletedDays(data.completedDays || []);
+                setSavedReflections(data.reflections || {});
+                setStreak(data.completedDays?.length || 0);
+            } else {
+                // Se não tem perfil mas tem user (ex: acabou de criar auth), usa o displayname
+                setUserName(u.displayName || null);
+            }
+        } catch (e) { console.error(e); }
       }
       setLoading(false);
     });
-    return () => unsubscribe();
+    return () => unsub();
   }, []);
 
-  // Leaderboard Listener
+  // Leaderboard
   useEffect(() => {
-    if (!db || !user) return;
+    if (!db) return; // Não precisa de user pra ver ranking, mas ok
     const q = collection(db, 'artifacts', appId, 'public', 'data', 'leaderboard');
-    // @ts-ignore
     const unsub = onSnapshot(q, (snapshot) => {
       const entries: any[] = [];
       snapshot.forEach((doc) => {
@@ -378,30 +276,51 @@ export default function App() {
       setLeaderboard(entries);
     });
     return () => unsub();
-  }, [user]);
+  }, []);
 
-  // Clear AI on day change
-  useEffect(() => { setAiInsight(null); }, [viewDay]);
+  // Gemini
+  const callGemini = async (promptType: any) => {
+    setAiLoading(true);
+    setAiInsight(null);
+    try {
+      const instruction = promptType === 'devotional' 
+        ? `Mensagem cristã curta e encorajadora sobre ${activeDayData.ref}`
+        : `Contexto histórico curto sobre ${activeDayData.ref}`;
+        
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: instruction }] }] })
+        }
+      );
+      const data = await response.json();
+      setAiInsight(data.candidates?.[0]?.content?.parts?.[0]?.text || "Sem resposta.");
+    } catch (e) { setAiInsight("Erro ao conectar."); }
+    setAiLoading(false);
+  };
 
-  // Handlers
+  // Handlers App
   const toggleComplete = async (day: any) => {
-    if (!user || !userName) return;
-    let newCompleted;
-    if (completedDays.includes(day)) {
-      newCompleted = completedDays.filter(d => d !== day);
-    } else {
-      newCompleted = [...completedDays, day];
-      const dData = rawPlanData.find(d => d.day === day);
-      if (dData?.isBookEnd) {
-        setModalContent({ title: "Livro Concluído! 🏆", body: `Parabéns! Você terminou ${dData.book}.` });
-        setShowModal(true);
-      }
+    if (!user) return;
+    let newCompleted = completedDays.includes(day) 
+        ? completedDays.filter(d => d !== day) 
+        : [...completedDays, day];
+    
+    if (!completedDays.includes(day)) {
+        const dData = rawPlanData.find(d => d.day === day);
+        if (dData?.isBookEnd) {
+            setModalContent({ title: "Livro Concluído! 🏆", body: `Parabéns! Você terminou ${dData.book}.` });
+            setShowModal(true);
+        }
     }
+
     setCompletedDays(newCompleted);
     setStreak(newCompleted.length);
     try {
       await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'profile'), { completedDays: newCompleted }, { merge: true });
-      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid), { name: userName, count: newCompleted.length, lastUpdate: serverTimestamp() }, { merge: true });
+      await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid), { name: userName, count: newCompleted.length }, { merge: true });
     } catch (e) { console.error(e); }
   };
 
@@ -411,70 +330,55 @@ export default function App() {
     setSavedReflections(newRefs);
     try {
       await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'profile'), { reflections: newRefs }, { merge: true });
-      alert("Salvo com sucesso! 🙏");
+      alert("Salvo!");
     } catch (e) { alert("Erro ao salvar."); }
   };
 
-  // Renderização
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-amber-500"><Flame className="animate-bounce" size={48} /></div>;
+  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">Carregando...</div>;
 
-  if (!user || user.isAnonymous) {
-    // Se for anônimo (entrou direto sem senha), mostra tela de perfil ou incentivo? 
-    // Na verdade, o código acima tenta logar anônimo. Se queremos só email/senha, precisamos mostrar a tela de login.
-    // Mas se o usuário JÁ entrou anônimo, ele pode usar. 
-    // Vou simplificar: Se não tem NOME (userName), mostra a tela de login/cadastro.
-  }
-
-  if (!user || (user.isAnonymous && !userName)) {
-     // Mostra login
-     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center animate-in fade-in">
-        <div className="bg-slate-900 border border-slate-700 p-8 rounded-xl max-w-md w-full shadow-2xl">
+  // TELA LOGIN / CADASTRO
+  if (!user || !userName) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+        <div className="bg-slate-900 border border-slate-700 p-8 rounded-xl w-full max-w-md shadow-2xl">
           <BookOpen size={48} className="text-amber-500 mx-auto mb-6" />
           <h1 className="text-2xl font-bold text-white mb-2">Jornada 90 Dias</h1>
-          <p className="text-slate-400 mb-8">Novo Testamento</p>
           
+          {/* Abas de Login/Criar */}
           <div className="flex border-b border-slate-700 mb-6">
-            <button 
-              onClick={() => {setIsLoginView(true); setAuthError("");}} 
-              className={`flex-1 pb-2 font-bold text-sm ${isLoginView ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-500'}`}
-            >
-              JÁ TENHO CONTA
-            </button>
-            <button 
-              onClick={() => {setIsLoginView(false); setAuthError("");}} 
-              className={`flex-1 pb-2 font-bold text-sm ${!isLoginView ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-500'}`}
-            >
-              CRIAR CONTA
-            </button>
+            <button onClick={() => setIsLoginView(true)} className={`flex-1 pb-2 font-bold text-sm ${isLoginView ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-500'}`}>ENTRAR</button>
+            <button onClick={() => setIsLoginView(false)} className={`flex-1 pb-2 font-bold text-sm ${!isLoginView ? 'text-amber-500 border-b-2 border-amber-500' : 'text-slate-500'}`}>CRIAR CONTA</button>
           </div>
 
           <div className="space-y-4">
             {!isLoginView && (
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-3 text-slate-500" size={18} />
-                <input type="text" placeholder="Seu Nome Completo" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded-lg focus:border-amber-500 outline-none" value={inputName} onChange={(e) => setInputName(e.target.value)} />
-              </div>
+                <div className="relative">
+                    <UserIcon className="absolute left-3 top-3 text-slate-500" size={18} />
+                    <input placeholder="Seu Nome" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded focus:border-amber-500 outline-none" value={inputName} onChange={e => setInputName(e.target.value)} />
+                </div>
             )}
+            <div className="relative">
+                <Mail className="absolute left-3 top-3 text-slate-500" size={18} />
+                <input placeholder="E-mail" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded focus:border-amber-500 outline-none" value={inputEmail} onChange={e => setInputEmail(e.target.value)} />
+            </div>
+            <div className="relative">
+                <Lock className="absolute left-3 top-3 text-slate-500" size={18} />
+                <input type="password" placeholder="Senha" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded focus:border-amber-500 outline-none" value={inputPassword} onChange={e => setInputPassword(e.target.value)} />
+            </div>
             
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 text-slate-500" size={18} />
-              <input type="email" placeholder="Seu E-mail" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded-lg focus:border-amber-500 outline-none" value={inputEmail} onChange={(e) => setInputEmail(e.target.value)} />
-            </div>
-
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 text-slate-500" size={18} />
-              <input type="password" placeholder="Sua Senha" className="w-full bg-slate-950 border border-slate-700 text-white pl-10 p-3 rounded-lg focus:border-amber-500 outline-none" value={inputPassword} onChange={(e) => setInputPassword(e.target.value)} />
-            </div>
-
-            {authError && <p className="text-red-400 text-xs text-left bg-red-900/20 p-2 rounded border border-red-900">{authError}</p>}
-
-            <button onClick={handleAuth} className="w-full bg-amber-700 hover:bg-amber-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 mt-2">
-              {isLoginView ? <><LogIn size={18} /> Entrar</> : <><UserPlus size={18} /> Cadastrar</>}
+            {authError && <p className="text-red-400 text-xs bg-red-900/20 p-2 rounded">{authError}</p>}
+            
+            <button onClick={handleAuth} className="w-full bg-amber-700 text-white font-bold py-3 rounded flex items-center justify-center gap-2">
+                {isLoginView ? <><LogIn size={18}/> Entrar</> : <><UserPlus size={18}/> Cadastrar</>}
             </button>
-            
-            <div className="mt-4 pt-4 border-t border-slate-800">
-               <button onClick={() => {signInAnonymously(auth);}} className="text-xs text-slate-500 hover:text-slate-300 underline">Quero entrar sem cadastro (Acesso temporário)</button>
+
+            {/* Opção "Entrar sem Senha" (Anônimo) separada e clara */}
+            <div className="pt-6 mt-4 border-t border-slate-800">
+                <p className="text-xs text-slate-500 mb-3">Ou acesse apenas com seu nome (sem salvar na nuvem)</p>
+                <div className="flex gap-2">
+                    <input placeholder="Nome para acesso rápido" className="flex-1 bg-slate-950 border border-slate-700 text-white p-3 rounded text-sm" value={tempName} onChange={e => setTempName(e.target.value)} />
+                    <button onClick={handleAnonymousLogin} disabled={tempName.length < 3} className="bg-slate-800 text-white px-4 rounded font-bold text-sm hover:bg-slate-700 disabled:opacity-50">Entrar</button>
+                </div>
             </div>
           </div>
         </div>
@@ -482,47 +386,18 @@ export default function App() {
     );
   }
 
-  // Se o usuário entrou mas não tem nome (Anônimo novo), pede nome
-  if (!userName && user) {
-      return (
-        <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center animate-in fade-in">
-            <div className="bg-slate-900 border border-slate-700 p-8 rounded-xl max-w-md w-full shadow-2xl">
-                <h1 className="text-xl font-bold text-white mb-4">Bem-vindo!</h1>
-                <p className="text-slate-400 mb-4">Como você gostaria de ser chamado?</p>
-                <input type="text" placeholder="Seu nome" className="w-full bg-slate-950 border border-slate-700 text-white p-3 rounded-lg mb-4" value={tempName} onChange={(e) => setTempName(e.target.value)} />
-                <button onClick={async () => {
-                    if(!tempName.trim()) return;
-                    setLoading(true);
-                    await setDoc(doc(db, 'artifacts', appId, 'users', user.uid, 'data', 'profile'), {
-                        name: tempName, completedDays: [], createdAt: serverTimestamp()
-                    }, { merge: true });
-                    await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'leaderboard', user.uid), {
-                        name: tempName, count: 0, lastUpdate: serverTimestamp()
-                    }, { merge: true });
-                    setUserName(tempName);
-                    setLoading(false);
-                }} className="w-full bg-amber-700 text-white py-3 rounded font-bold">Continuar</button>
-            </div>
-        </div>
-      )
-  }
-
+  // TELA PRINCIPAL (APP)
   return (
     <div className="min-h-screen bg-slate-950 text-slate-200 font-sans pb-24">
-      <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-30 shadow-lg">
-        <div className="max-w-md mx-auto px-4 py-4 flex justify-between items-center">
-          <div>
+      <header className="bg-slate-900 border-b border-slate-800 p-4 sticky top-0 z-30 flex justify-between items-center shadow-lg">
+        <div>
             <h1 className="text-lg font-bold text-amber-500">JORNADA 90 DIAS</h1>
-            <p className="text-xs text-slate-500 flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500"></span> {userName} {user.isAnonymous && "(Visitante)"}</p>
-          </div>
-          <div className="flex items-center space-x-3">
-            <div className="flex items-center space-x-1 bg-slate-800 px-3 py-1 rounded-full border border-slate-700">
-              <Flame size={16} className={streak > 0 ? "text-orange-500" : "text-slate-600"} />
-              <span className="font-mono font-bold text-sm">{streak}</span>
-            </div>
-            <button onClick={handleLogout} className="text-slate-500 hover:text-red-400"><LogOut size={20} /></button>
-          </div>
+            <p className="text-xs text-slate-500 flex items-center gap-1">
+                <span className={`w-2 h-2 rounded-full ${user.isAnonymous ? 'bg-yellow-500' : 'bg-green-500'}`}></span> 
+                {userName}
+            </p>
         </div>
+        <button onClick={handleLogout} className="text-slate-500 hover:text-red-400"><LogOut size={20} /></button>
       </header>
 
       {currentView === 'dashboard' && (
@@ -547,44 +422,24 @@ export default function App() {
             <button onClick={() => setViewDay(d => Math.min(90, d + 1))} disabled={viewDay === 90} className="p-2 hover:bg-slate-800 rounded text-slate-400 disabled:opacity-30"><ChevronRight /></button>
           </div>
 
-          <div className="space-y-4">
-            <div className="flex items-center space-x-2 text-amber-500"><Heart size={20} /><h3 className="font-bold text-lg">Palavra de Encorajamento</h3></div>
-            <div className="bg-slate-900 p-6 rounded-lg border-l-4 border-amber-600 shadow-lg relative">
-               <p className="text-lg leading-relaxed text-slate-300 italic relative z-10">"{aiInsight ? aiInsight : getStaticReflection()}"</p>
-               {aiInsight && <div className="absolute top-0 right-0 p-2 opacity-20 text-amber-500"><Sparkles size={40} /></div>}
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <button onClick={() => callGemini('devotional')} disabled={aiLoading} className="bg-indigo-900/40 border border-indigo-700/50 text-indigo-300 py-3 rounded-lg flex flex-col items-center justify-center gap-1">
-                {aiLoading ? <Flame className="animate-spin" size={20} /> : <Heart size={20} />} <span className="text-xs font-bold uppercase">Mensagem de Fé</span>
-              </button>
-              <button onClick={() => callGemini('context')} disabled={aiLoading} className="bg-emerald-900/30 border border-emerald-700/50 text-emerald-300 py-3 rounded-lg flex flex-col items-center justify-center gap-1">
-                 {aiLoading ? <Flame className="animate-spin" size={20} /> : <ScrollText size={20} />} <span className="text-xs font-bold uppercase">Curiosidades</span>
-              </button>
-            </div>
+          <div className="bg-slate-900 p-6 rounded-lg border-l-4 border-amber-600 shadow-lg relative">
+             <div className="flex items-center gap-2 mb-2 text-amber-500"><Heart size={18} /><span className="font-bold">Palavra de Encorajamento</span></div>
+             <p className="text-lg leading-relaxed text-slate-300 italic relative z-10">"{aiInsight ? aiInsight : getStaticReflection()}"</p>
+             <div className="flex gap-2 mt-4">
+                <button onClick={() => callGemini('devotional')} disabled={aiLoading} className="flex-1 bg-slate-800 py-2 rounded text-xs font-bold hover:bg-slate-700 border border-slate-700 text-indigo-300 flex items-center justify-center gap-1">{aiLoading ? <Flame className="animate-spin" size={14}/> : <Sparkles size={14}/>} NOVA MENSAGEM</button>
+                <button onClick={() => callGemini('context')} disabled={aiLoading} className="flex-1 bg-slate-800 py-2 rounded text-xs font-bold hover:bg-slate-700 border border-slate-700 text-emerald-300 flex items-center justify-center gap-1">{aiLoading ? <Flame className="animate-spin" size={14}/> : <ScrollText size={14}/>} CURIOSIDADES</button>
+             </div>
           </div>
 
           <div className="space-y-3">
              <label className="block text-sm font-medium text-slate-400 uppercase">Seu Diário de Fé</label>
-             <textarea className="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-slate-200" rows={4} placeholder="O que Deus falou com você hoje?" value={savedReflections[viewDay] || reflectionInput} onChange={(e) => setReflectionInput(e.target.value)} />
+             <textarea className="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 text-slate-200 focus:border-amber-500 outline-none" rows={4} placeholder="O que Deus falou com você hoje?" value={savedReflections[viewDay] || reflectionInput} onChange={(e) => setReflectionInput(e.target.value)} />
              <button onClick={saveReflection} className="text-xs text-amber-600 font-bold uppercase flex items-center gap-1"><CheckCircle size={14} /> Salvar Anotação</button>
           </div>
 
-          <button onClick={() => toggleComplete(activeDayData.day)} className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center space-x-3 shadow-lg ${isCompleted ? 'bg-green-900/30 text-green-500 border border-green-800' : 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'}`}>
+          <button onClick={() => toggleComplete(activeDayData.day)} className={`w-full py-4 rounded-lg font-bold text-lg flex items-center justify-center space-x-3 shadow-lg transition-all active:scale-95 ${isCompleted ? 'bg-green-900/30 text-green-500 border border-green-800' : 'bg-gradient-to-r from-amber-700 to-amber-800 text-white'}`}>
             {isCompleted ? <><CheckCircle className="w-6 h-6" /><span>Leitura Concluída</span></> : <><BookOpen className="w-6 h-6" /><span>Marcar como Lido</span></>}
           </button>
-
-          {user?.isAnonymous && (
-            <div className="mt-8 p-4 border border-yellow-800/50 bg-yellow-900/10 rounded-lg flex items-start gap-3">
-              <ShieldCheck className="text-yellow-500 shrink-0" size={20} />
-              <div>
-                <h4 className="text-sm font-bold text-yellow-500">Modo Visitante</h4>
-                <p className="text-xs text-slate-400 mt-1">
-                  Se você limpar o celular, perderá seus dados. Para salvar de verdade, saia e crie uma conta com e-mail e senha.
-                </p>
-              </div>
-            </div>
-          )}
-
         </main>
       )}
 
